@@ -16,11 +16,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install NPM & Build Assets
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Sync Laravel Core via FTP
