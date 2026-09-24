@@ -29,7 +29,7 @@
         {{-- ================= MODAL TUTUP SHIFT ================= --}}
         <div x-show="showCloseShiftModal" class="fixed inset-0 z-50 flex items-center justify-center bg-[#2B1810]/70 backdrop-blur-sm p-4" style="display: none;">
             <div class="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8DFD8] max-w-md w-full p-5 sm:p-6">
-                <h3 class="text-lg font-serif font-bold text-[#2B1810] mb-1">Rekonsiliasi & Tutup Shift</h3>
+                <h3 class="text-lg font-serif font-bold text-[#2B1810] mb-1">Rekonsiliasi &amp; Tutup Shift</h3>
                 <p class="text-xs text-[#7B6E65] mb-4">Hitung seluruh uang fisik tunai yang ada di dalam laci kasir.</p>
 
                 <div class="bg-[#F5EFEB] border border-[#E2D6C8] rounded-xl p-3 text-xs space-y-1.5 mb-4">
@@ -458,7 +458,7 @@
                             <div @click="handleProductClick(product)"
                                  class="group bg-[#FFFDF9] rounded-xl sm:rounded-2xl border border-[#E8DFD8] hover:border-[#8C6239] shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 flex flex-col justify-between overflow-hidden active:scale-95">
                                 
-                                {{-- Gambar Menu (Label stok dihilangkan) --}}
+                                {{-- Gambar Menu --}}
                                 <div class="h-24 sm:h-28 md:h-32 w-full bg-[#EDE4DA] overflow-hidden relative">
                                     <template x-if="product.image">
                                         <img :src="product.image" :alt="product.name" 
@@ -595,7 +595,7 @@
                     </div>
 
                     <div class="flex items-center justify-between gap-2" x-show="!targetAppendOrder">
-                        <span class="text-xs text-[#5C4A3E]">Diskon (Rp):</span>
+                        <span class="text-xs font-bold text-[#5C4A3E]">Diskon (Rp):</span>
                         <input type="number" x-model.number="discountAmount" min="0" placeholder="0" class="w-24 sm:w-28 py-1 px-2.5 text-xs text-right rounded-lg border-[#D7C7B7] bg-white font-mono font-bold text-[#9E2A2B] focus:border-[#8C6239] focus:ring-[#8C6239]">
                     </div>
 
@@ -974,8 +974,21 @@
                         });
                         const data = await res.json();
                         if (res.ok) {
-                            alert('Shift berhasil ditutup. Selisih kas fisik: ' + this.formatRupiah(data.shift.difference));
-                            window.location.reload();
+                            alert('Shift berhasil ditutup. Selisih kas fisik: ' + this.formatRupiah(data.shift.difference) + '\nSesi kasir selesai. Anda akan dialihkan keluar.');
+                            
+                            // Logout otomatis untuk mengakhiri sesi kasir
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '{{ route('logout') }}';
+
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_token';
+                            csrfInput.value = '{{ csrf_token() }}';
+
+                            form.appendChild(csrfInput);
+                            document.body.appendChild(form);
+                            form.submit();
                         } else {
                             alert(data.message);
                         }
