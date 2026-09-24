@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\CashierShift;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +54,31 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $userId = Auth::id();
+
+        // Tutup otomatis shift kasir yang masih menggantung saat logout
+        if ($userId) {
+            $activeShift = CashierShift::where('user_id', $userId)
+                ->whereNull('closed_at')
+                ->first();
+
+            if ($activeShift) {
+                $cashSales = $activeShift->orders()
+                    ->where('payment_method', 'cash')
+                    ->where('status', 'paid')
+                    ->sum('grand_total');
+
+                $expectedEnding = $activeShift->starting_cash + $cashSales;
+
+                $activeShift->update([
+                    'expected_ending_cash' => $expectedEnding,
+                    'actual_ending_cash'   => $expectedEnding,
+                    'difference'           => 0,
+                    'closed_at'            => now(),
+                ]);
+            }
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
